@@ -1,56 +1,54 @@
-/**se importan los componentes a ocupar  */
-import { useState, useEffect } from 'react';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
-/**Header lo importamos dentro de MiApi */
 import Header from '../components/Header';
 
 function MiApi() {
-  const [info, setInfo] = useState([]);
-  const [input, setInput] = useState('');
-  const [personajeFiltro, setPersonajeFiltro] = useState([]);
+//se crean los Estados segun funcion 
+  const [info, setInfo] = useState([]); 
+  const [input, setInput] = useState(''); 
+  const [personajeFiltro, setPersonajeFiltro] = useState([]); 
+  const [personajeOrdenado, setPersonajeOrdenado] = useState([]); 
 
   useEffect(() => {
-    consultarInformacion();
+    consultarInformacion(); //1.a- Llama a la función para obtener la información de los personajes al cargar el componente
   }, []);
 
-  /**4- en esta funcion llamos a la api */
-  const consultarInformacion = async () => {
-    const url = 'https://apisimpsons.fly.dev/api/personajes?limit=20&page=1';
+  const consultarInformacion = async () => {//1- se crea la fncion parallmar a la api
+    const url = 'https://apisimpsons.fly.dev/api/personajes?limit=300&page=1';
     const response = await fetch(url);
     const data = await response.json();
-  /**5- se manda al estado de setInfo */
-    setInfo(data.docs);
-    // Actualizar personajeFiltro solo si no hay ningún valor en el input
+    setInfo(data.docs); //2- Actualiza el estado 'info' con los datos de los personajes obtenidos de la API
+    const personajesOrdenados = data.docs.slice().sort((a, b) => a.Nombre.localeCompare(b.Nombre)); //3- Ordena los personajes iniciales por nombre
+    setPersonajeOrdenado(personajesOrdenados); // 4-Actualiza el estado 'personajeOrdenado' con los personajes ordenados
     if (input === '') {
-      setPersonajeFiltro(data.docs);
+      setPersonajeFiltro(personajesOrdenados); // 5-Actualiza el estado 'personajeFiltro' solo si no hay un valor en el input
     }
   };
-  
-  /**3- aqui el porps pasa por una constante la cual se manda al estado setInput */
+
+  // 7-Actualiza el estado 'input' con el valor del input ingresado por el usuario
   const filtro = (event) => {
     const inputValue = event.target.value;
-    setInput(inputValue);
-    /**6- la contante personajesFiltrados es el resultado de el filtro que se hace al arreglo bajo
-     * los parametros de nombre
-     */
+    setInput(inputValue); 
+    // 8-Filtra los personajes en función del valor del input
     const personajesFiltrados = info.filter((personaje) =>
       personaje.Nombre.toLowerCase().includes(inputValue.toLowerCase())
-    );
-    /** por ultimo se manda a perosonajesFiltrados al estado setPersonajesFiltro para que luego sea usada en en main abajo
-     * en la creacion de tarjetas
-     */
+    ); 
+    // 9-Ordena los personajes filtrados por nombre
+    personajesFiltrados.sort((a, b) => a.Nombre.localeCompare(b.Nombre));
+     //-10 Actualiza el estado 'personajeFiltro' con los personajes filtrados y ordenados
     setPersonajeFiltro(personajesFiltrados);
   };
 
+  useEffect(() => {
+    setPersonajeOrdenado(personajeFiltro); //10- Actualiza el estado 'personajeOrdenado' cuando cambia el estado 'personajeFiltro'
+  }, [personajeFiltro]);
+
   return (
     <div>
-      {/*2- en header por medio de props se extrae el valor del input*/}
-      <Header filtro={filtro} />
+      <Header filtro={filtro} /> {/*6- pasa la función de filtro como prop */}
       <main>
-        {/* se recorre el arreglo con .map para tomar los datos y aderirlos a la tarjeta
-        por medio de los props */}
-        {personajeFiltro.map((personaje) => (
+        {/*11- Mapea los personajes ordenados y renderiza el componente Card para cada uno */}
+        {personajeOrdenado.map((personaje) => ( 
           <Card
             key={personaje._id}
             nombre={personaje.Nombre}
@@ -60,7 +58,7 @@ function MiApi() {
             estado={personaje.Estado}
             ocupacion={personaje.Ocupacion}
           />
-        ))}                                       
+        ))}
       </main>
     </div>
   );
